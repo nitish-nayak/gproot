@@ -41,43 +41,46 @@ TVectorD GPKernel::KernelDiag(std::vector<GPPoint> pts) const
 //----------------------------------------------------------------------
 double RBFKernel::Element(GPPoint pt1, GPPoint pt2, int dpar_idx) const
 {
-  assert(dpar_idx < 1 && "RBF Kernel has only 1 hyperparameter, index is either -1 or 0");
+  assert(dpar_idx < 2 && "RBF Kernel has only 2 hyperparameters, index is either -1, 0 or 1");
  
   double scale = fPars[0];
+  double coeff = fPars[1];
   if(pt1.Mag(pt2) == 0.){
     if(dpar_idx == 0) 
       return 0.;
     else
-      return 1. + fNoise;
+      return coeff * (1. + fNoise);
   }
 
   double val = pt1.Mag(pt2)/(scale*scale);
   if(dpar_idx == 0)
-    return exp(-val/2.)*val;
+    return coeff * exp(-val/2.)*val;
   else
-    return exp(-val/2.);
+    return coeff * exp(-val/2.);
 }
 
 //----------------------------------------------------------------------
 void RBFKernel::SetThetas(std::vector<double> thetas)
 {
-  assert(thetas.size() == fPars.size() && "Theta vector should be of size 1 for RBF Kernel");
+  assert(thetas.size() == fPars.size() && "Theta vector should be of size 2 for RBF Kernel");
   fPars[0] = exp(thetas[0]);
+  fPars[1] = exp(thetas[1]);
 }
 
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 double RationalQuadraticKernel::Element(GPPoint pt1, GPPoint pt2, int dpar_idx) const
 {
-  assert(dpar_idx < 2 && "Rational Quadratic Kernel has only 2 hyperparameters, index is either -1, 0 or 1");
+  assert(dpar_idx < 3 && "Rational Quadratic Kernel has only 3 hyperparameters, index is either -1, 0, 1 or 2");
   
   double scale = fPars[0];
   double alpha = fPars[1];
+  double coeff = fPars[2];
   if(pt1.Mag(pt2) == 0.){
-    if(dpar_idx >= 0) 
+    if(dpar_idx >= 0 && dpar_idx < 2) 
       return 0.;
     else
-      return 1. + fNoise;
+      return coeff * (1. + fNoise);
   }
 
   double dists = pt1.Mag(pt2);
@@ -86,18 +89,19 @@ double RationalQuadraticKernel::Element(GPPoint pt1, GPPoint pt2, int dpar_idx) 
 
   double val = TMath::Power(base, -alpha);
 
-  if(dpar_idx == -1)
-    return val;
-  else if(dpar_idx == 0)
-    return dists * val/(base * TMath::Power(scale, 2));
+  if(dpar_idx == 0)
+    return coeff * dists * val/(base * TMath::Power(scale, 2));
+  else if(dpar_idx == 1)
+    return coeff * val * (-alpha * log(base) + dists / (2 * TMath::Power(scale, 2) * base));
   else
-    return val * (-alpha * log(base) + dists / (2 * TMath::Power(scale, 2) * base));
+    return coeff * val;
 }
 
 //----------------------------------------------------------------------
 void RationalQuadraticKernel::SetThetas(std::vector<double> thetas)
 {
-  assert(thetas.size() == fPars.size() && "Theta vector should be of size 2 for Rational Quadratic Kernel");
+  assert(thetas.size() == fPars.size() && "Theta vector should be of size 3 for Rational Quadratic Kernel");
   fPars[0] = exp(thetas[0]);
   fPars[1] = exp(thetas[1]);
+  fPars[2] = exp(thetas[2]);
 }
