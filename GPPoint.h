@@ -20,7 +20,7 @@ public:
   double Z() const { return fZ; }
   
   double Mag(GPPoint pt) const { 
-    return TMath::Power(fX-pt.X(), 2) + TMath::Power(fY-pt.Y(), 2) + TMath::Power(fZ-pt.Z(), 2)
+    return TMath::Power(fX-pt.X(), 2) + TMath::Power(fY-pt.Y(), 2) + TMath::Power(fZ-pt.Z(), 2);
   };
   
   bool operator==(GPPoint pt) const {
